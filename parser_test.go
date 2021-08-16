@@ -51,15 +51,6 @@ func TestParseAndroidManifest(t *testing.T) {
 	if err != nil {
 		t.Errorf("got %v want no error", err)
 	}
-	if manifest.Package != "com.example.helloworld" {
-		t.Errorf("got %v want %v", manifest.Package, "com.example.helloworld")
-	}
-	if manifest.VersionName != "1.0" {
-		t.Errorf("got %v want %v", manifest.VersionName, "1.0")
-	}
-	if manifest.VersionCode != "1" {
-		t.Errorf("got %v want %v", manifest.VersionCode, "1")
-	}
 	t.Logf("%#v", manifest)
 }
 

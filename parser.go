@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/andrianbdn/iospng"
@@ -30,19 +31,20 @@ const (
 )
 
 type AppInfo struct {
-	Name     string
-	BundleId string
-	Version  string
-	Build    string
-	Icon     image.Image
-	Size     int64
+	Name         string
+	BundleId     string
+	Version      string
+	VersionCode  string
+	Build        string
+	Icon         image.Image
+	Size         int64
+	MainActivity string
 }
 
 type androidManifest struct {
 	Package     string `xml:"package,attr"`
 	VersionName string `xml:"versionName,attr"`
 	VersionCode string `xml:"versionCode,attr"`
-	Activity    string `xml:"application>activity"`
 }
 
 type iosPlist struct {
@@ -104,7 +106,7 @@ func NewAppParser(name string) (*AppInfo, error) {
 	return nil, errors.New("unknown platform")
 }
 
-func parseAndroidManifest(xmlFile *zip.File) (*androidManifest, error) {
+func parseAndroidManifest(xmlFile *zip.File) (*apk.Manifest, error) {
 	rc, err := xmlFile.Open()
 	if err != nil {
 		return nil, err
@@ -121,7 +123,7 @@ func parseAndroidManifest(xmlFile *zip.File) (*androidManifest, error) {
 		return nil, err
 	}
 
-	manifest := new(androidManifest)
+	manifest := new(apk.Manifest)
 	decoder := xml.NewDecoder(xmlContent.Reader())
 	if err := decoder.Decode(manifest); err != nil {
 		return nil, err
@@ -140,10 +142,20 @@ func parseApkFile(xmlFile *zip.File) (*AppInfo, error) {
 	}
 
 	info := new(AppInfo)
-	info.BundleId = manifest.Package
-	info.Version = manifest.VersionName
-	info.Build = manifest.VersionCode
-
+	info.BundleId, _ = manifest.Package.String()
+	info.Version, _ = manifest.VersionName.String()
+	var code, _ = manifest.VersionCode.Int32()
+	info.Build = strconv.Itoa(int(code))
+	for _, activity := range manifest.App.Activities {
+		for _, filter := range activity.IntentFilters {
+			for _, category := range filter.Categories {
+				if name, _ := category.Name.String(); name == "android.intent.category.LAUNCHER" {
+					info.MainActivity, _ = activity.Name.String()
+					return info, nil
+				}
+			}
+		}
+	}
 	return info, nil
 }
 
