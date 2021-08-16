@@ -13,10 +13,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/DHowett/go-plist"
 	"github.com/andrianbdn/iospng"
 	"github.com/shogo82148/androidbinary"
 	"github.com/shogo82148/androidbinary/apk"
+	"howett.net/plist"
 )
 
 var (
@@ -42,6 +42,7 @@ type androidManifest struct {
 	Package     string `xml:"package,attr"`
 	VersionName string `xml:"versionName,attr"`
 	VersionCode string `xml:"versionCode,attr"`
+	Activity    string `xml:"application>activity"`
 }
 
 type iosPlist struct {

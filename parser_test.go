@@ -60,6 +60,7 @@ func TestParseAndroidManifest(t *testing.T) {
 	if manifest.VersionCode != "1" {
 		t.Errorf("got %v want %v", manifest.VersionCode, "1")
 	}
+	t.Logf("%#v", manifest)
 }
 
 func TestParseApkFile(t *testing.T) {
@@ -80,6 +81,7 @@ func TestParseApkFile(t *testing.T) {
 	if apk.Build != "1" {
 		t.Errorf("got %v want %v", apk.Build, "1")
 	}
+	t.Logf("%+v", apk)
 }
 
 func TestParseApkIconAndLabel(t *testing.T) {
