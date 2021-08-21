@@ -143,3 +143,13 @@ func TestParseIpaIcon(t *testing.T) {
 		t.Errorf("got %v want %v", err, ErrNoIcon)
 	}
 }
+
+func TestApk(t *testing.T) {
+	parser, err := NewAPKParser("C:/QMDownload/SoftMgr/elem.apk")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("detail: %+v", parser)
+
+}

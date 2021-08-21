@@ -41,6 +41,16 @@ type AppInfo struct {
 	MainActivity string
 }
 
+type PkgInfo struct {
+	PackageName  string      `json:"packageName"`
+	MainActivity string      `json:"mainActivity"`
+	Label        string      `json:"label"`
+	VersionName  string      `json:"versionName"`
+	VersionCode  int         `json:"versionCode"`
+	Size         int64       `json:"size"`
+	Icon         image.Image `json:"-"`
+}
+
 type androidManifest struct {
 	Package     string `xml:"package,attr"`
 	VersionName string `xml:"versionName,attr"`
@@ -53,6 +63,28 @@ type iosPlist struct {
 	CFBundleVersion      string `plist:"CFBundleVersion"`
 	CFBundleShortVersion string `plist:"CFBundleShortVersionString"`
 	CFBundleIdentifier   string `plist:"CFBundleIdentifier"`
+}
+
+func NewAPKParser(apkpath string) (*PkgInfo, error) {
+	finfo, err := os.Stat(apkpath)
+	var info = new(PkgInfo)
+	if err != nil {
+		return nil, err
+	}
+	info.Size = finfo.Size()
+	pkg, err := apk.OpenFile(apkpath)
+	if err != nil {
+		return nil, err
+	}
+	defer pkg.Close()
+
+	info.PackageName = pkg.PackageName()
+	info.Label, _ = pkg.Label(nil)
+	info.MainActivity, _ = pkg.MainActivity()
+	info.Icon, _ = pkg.Icon(nil)
+	info.VersionCode = int(pkg.Manifest().VersionCode.MustInt32())
+	info.VersionName = pkg.Manifest().VersionName.MustString()
+	return info, nil
 }
 
 func NewAppParser(name string) (*AppInfo, error) {
@@ -146,15 +178,25 @@ func parseApkFile(xmlFile *zip.File) (*AppInfo, error) {
 	info.Version, _ = manifest.VersionName.String()
 	var code, _ = manifest.VersionCode.Int32()
 	info.Build = strconv.Itoa(int(code))
+	var mainActivityList []string
 	for _, activity := range manifest.App.Activities {
+
+		activityName, _ := activity.Name.String()
+		label, _ := activity.Label.String()
+		if label == "android.intent.action.MAIN" {
+			mainActivityList = append(mainActivityList, activityName)
+		}
 		for _, filter := range activity.IntentFilters {
 			for _, category := range filter.Categories {
 				if name, _ := category.Name.String(); name == "android.intent.category.LAUNCHER" {
-					info.MainActivity, _ = activity.Name.String()
-					return info, nil
+					activityName, _ := activity.Name.String()
+					mainActivityList = append(mainActivityList, activityName)
 				}
 			}
 		}
+	}
+	if len(mainActivityList) > 0 {
+		info.MainActivity = mainActivityList[0]
 	}
 	return info, nil
 }
