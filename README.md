@@ -10,7 +10,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/phinexdaz/ipapk"
+	"github.com/loovien/ipapk"
 )
 
 func main() {
