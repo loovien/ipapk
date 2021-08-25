@@ -81,6 +81,20 @@ func NewAPKParser(apkpath string) (*PkgInfo, error) {
 	info.PackageName = pkg.PackageName()
 	info.Label, _ = pkg.Label(nil)
 	info.MainActivity, _ = pkg.MainActivity()
+	aliases := pkg.Manifest().App.ActivityAliases
+	if len(aliases) > 0 {
+		for _, activity := range aliases {
+			mainAliasActivity, _ := activity.Name.String()
+			if len(mainAliasActivity) <= 0 {
+				continue
+			}
+			targetActivity, _ := activity.TargetActivity.String()
+			if info.MainActivity != targetActivity {
+				continue
+			}
+			info.MainActivity = mainAliasActivity
+		}
+	}
 	info.Icon, _ = pkg.Icon(nil)
 	info.VersionCode = int(pkg.Manifest().VersionCode.MustInt32())
 	info.VersionName = pkg.Manifest().VersionName.MustString()
